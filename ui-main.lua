@@ -1,9 +1,9 @@
--- Удаляем, если уже есть
+-- Удаляем старый GUI, если он есть
 if game:GetService("CoreGui"):FindFirstChild("FakeLoadingScreen") then
     game:GetService("CoreGui"):FindFirstChild("FakeLoadingScreen"):Destroy()
 end
 
--- GUI в CoreGui
+-- Создаем GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "FakeLoadingScreen"
 gui.ResetOnSpawn = false
@@ -15,7 +15,7 @@ gui.Parent = game:GetService("CoreGui")
 local backgroundColor = Color3.fromRGB(10, 10, 30)
 local mainBlue = Color3.fromRGB(0, 120, 255)
 local darkBlue = Color3.fromRGB(20, 20, 50)
-local barFillColor = Color3.fromRGB(255, 255, 255) -- белый
+local barFillColor = Color3.fromRGB(255, 255, 255)
 
 -- Фон
 local background = Instance.new("Frame")
@@ -28,10 +28,27 @@ background.Selectable = false
 background.ZIndex = 0
 background.Parent = gui
 
--- Плавное появление
+-- Анимация появления
 game:GetService("TweenService"):Create(background, TweenInfo.new(1.5), {
-    BackgroundTransparency = 0
+	BackgroundTransparency = 0
 }):Play()
+
+-- Логотип
+local logo = Instance.new("ImageLabel")
+logo.Size = UDim2.new(0, 100, 0, 100)
+logo.Position = UDim2.new(0.5, -50, 0.12, 0)
+logo.BackgroundTransparency = 1
+logo.Image = "rbxassetid://7733960981" -- Заменяемый логотип
+logo.ZIndex = 2
+logo.Parent = background
+
+-- Вращение логотипа
+task.spawn(function()
+	while background.Parent do
+		logo.Rotation = logo.Rotation + 1
+		task.wait(0.01)
+	end
+end)
 
 -- Заголовок
 local title = Instance.new("TextLabel")
@@ -69,16 +86,15 @@ barBackground.ClipsDescendants = true
 barBackground.ZIndex = 1
 barBackground.Parent = background
 
--- Более скруглённые углы (угол: 100%)
 local bgCorner = Instance.new("UICorner")
 bgCorner.CornerRadius = UDim.new(1, 0)
 bgCorner.Parent = barBackground
 
--- Loading bar (сама заполняющаяся часть)
+-- Загрузка
 local loadingBar = Instance.new("Frame")
 loadingBar.Size = UDim2.new(0, 0, 1, 0)
 loadingBar.Position = UDim2.new(0, 0, 0, 0)
-loadingBar.BackgroundColor3 = barFillColor -- белый цвет
+loadingBar.BackgroundColor3 = barFillColor
 loadingBar.BorderSizePixel = 0
 loadingBar.ZIndex = 2
 loadingBar.Parent = barBackground
@@ -87,7 +103,7 @@ local barCorner = Instance.new("UICorner")
 barCorner.CornerRadius = UDim.new(1, 0)
 barCorner.Parent = loadingBar
 
--- Статус
+-- Статус текста
 local statusText = Instance.new("TextLabel")
 statusText.Size = UDim2.new(1, 0, 0.05, 0)
 statusText.Position = UDim2.new(0, 0, 0.565, 0)
@@ -100,34 +116,52 @@ statusText.Font = Enum.Font.Gotham
 statusText.ZIndex = 1
 statusText.Parent = background
 
--- Фейковые сообщения
+-- Сообщения
 local fakeMessages = {
- "Initializing...",
- "Loading modules...",
- "Optimizing assets...",
- "Connecting to servers...",
- "Loading UI components...",
- "Injecting scripts...",
- "Almost done...",
- "Finalizing..."
+	"Initializing...",
+	"Loading modules...",
+	"Optimizing assets...",
+	"Connecting to servers...",
+	"Loading UI components...",
+	"Injecting scripts...",
+	"Almost done...",
+	"Finalizing..."
 }
 
--- Меняем статус каждые 15 сек
+-- Меняем сообщение каждые 15 сек
 task.spawn(function()
- for i = 1, math.floor(180 / 15) do
-  statusText.Text = fakeMessages[math.random(1, #fakeMessages)]
-  task.wait(15)
- end
+	for i = 1, math.floor(180 / 15) do
+		statusText.Text = fakeMessages[math.random(1, #fakeMessages)]
+		task.wait(15)
+	end
 end)
 
--- Медленная анимация загрузки (на 3 минуты)
+-- Анимация загрузки
 local TweenService = game:GetService("TweenService")
 local tween = TweenService:Create(loadingBar, TweenInfo.new(180, Enum.EasingStyle.Linear), {
- Size = UDim2.new(1, 0, 1, 0)
+	Size = UDim2.new(1, 0, 1, 0)
 })
 tween:Play()
 
--- Если нужно автоудаление через 3 минуты:
--- task.delay(180, function()
---     gui:Destroy()
--- end)
+-- Через 3 минуты — сообщение об ошибке
+task.delay(180, function()
+	-- Удаляем все старое
+	for _, obj in pairs(background:GetChildren()) do
+		if obj ~= background then
+			obj:Destroy()
+		end
+	end
+
+	-- Сообщение об ошибке
+	local errorText = Instance.new("TextLabel")
+	errorText.Size = UDim2.new(1, 0, 0.2, 0)
+	errorText.Position = UDim2.new(0, 0, 0.4, 0)
+	errorText.BackgroundTransparency = 1
+	errorText.Text = "Oops...\nThe Loading Failed\nRejoin And Try Again!"
+	errorText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	errorText.TextStrokeTransparency = 0.4
+	errorText.TextScaled = true
+	errorText.Font = Enum.Font.GothamBold
+	errorText.ZIndex = 2
+	errorText.Parent = background
+end)
