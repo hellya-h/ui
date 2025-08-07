@@ -1,167 +1,117 @@
--- Удаляем старый GUI, если он есть
-if game:GetService("CoreGui"):FindFirstChild("FakeLoadingScreen") then
-    game:GetService("CoreGui"):FindFirstChild("FakeLoadingScreen"):Destroy()
-end
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local TeleportService = game:GetService("TeleportService")
 
--- Создаем GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "FakeLoadingScreen"
-gui.ResetOnSpawn = false
+-- Создаём GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.IgnoreGuiInset = true
-gui.DisplayOrder = 1000
-gui.Parent = game:GetService("CoreGui")
+gui.ResetOnSpawn = false
+gui.Name = "EverythingScriptGui"
+gui.DisplayOrder = 9999999
 
--- Цвета
-local backgroundColor = Color3.fromRGB(10, 10, 30)
-local mainBlue = Color3.fromRGB(0, 120, 255)
-local darkBlue = Color3.fromRGB(20, 20, 50)
-local barFillColor = Color3.fromRGB(255, 255, 255)
+-- Блокировка мыши
+local blockInput = Instance.new("TextButton", gui)
+blockInput.Size = UDim2.new(1,0,1,0)
+blockInput.BackgroundTransparency = 1
+blockInput.Text = ""
+blockInput.Modal = true -- это блокирует ввод, включая ESC
 
 -- Фон
-local background = Instance.new("Frame")
-background.Size = UDim2.new(1, 0, 1, 0)
-background.BackgroundColor3 = backgroundColor
-background.BorderSizePixel = 0
-background.BackgroundTransparency = 1
-background.Active = false
-background.Selectable = false
-background.ZIndex = 0
-background.Parent = gui
-
--- Анимация появления
-game:GetService("TweenService"):Create(background, TweenInfo.new(1.5), {
-	BackgroundTransparency = 0
-}):Play()
+local background = Instance.new("Frame", gui)
+background.Size = UDim2.new(1,0,1,0)
+background.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
 
 -- Логотип
-local logo = Instance.new("ImageLabel")
+local logo = Instance.new("ImageLabel", background)
 logo.Size = UDim2.new(0, 100, 0, 100)
-logo.Position = UDim2.new(0.5, -50, 0.12, 0)
+logo.Position = UDim2.new(0.5, -50, 0.25, -50)
 logo.BackgroundTransparency = 1
-logo.Image = "rbxassetid://7733960981" -- Заменяемый логотип
+logo.Image = "https://www.roblox.com/asset/?id=16413073906" -- заменяемая ссылка
 logo.ZIndex = 2
-logo.Parent = background
 
--- Вращение логотипа
+-- Анимация вращения логотипа
 task.spawn(function()
-	while background.Parent do
-		logo.Rotation = logo.Rotation + 1
+	while gui do
+		logo.Rotation += 1
 		task.wait(0.01)
 	end
 end)
 
--- Заголовок
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0.1, 0)
-title.Position = UDim2.new(0, 0, 0.26, 0)
-title.BackgroundTransparency = 1
+-- Название
+local title = Instance.new("TextLabel", background)
+title.Size = UDim2.new(1, 0, 0, 50)
+title.Position = UDim2.new(0, 0, 0.4, 0)
 title.Text = "Everything Script"
-title.TextColor3 = mainBlue
-title.TextStrokeTransparency = 0.5
-title.TextScaled = true
-title.Font = Enum.Font.FredokaOne
-title.ZIndex = 1
-title.Parent = background
+title.TextColor3 = Color3.fromRGB(0, 170, 255)
+title.TextSize = 36
+title.Font = Enum.Font.GothamBlack
+title.BackgroundTransparency = 1
 
 -- Подпись
-local subtitle = Instance.new("TextLabel")
-subtitle.Size = UDim2.new(1, 0, 0.05, 0)
-subtitle.Position = UDim2.new(0, 0, 0.345, 0)
-subtitle.BackgroundTransparency = 1
-subtitle.Text = "By @thebestexploiterr on tiktok"
-subtitle.TextColor3 = mainBlue
-subtitle.TextStrokeTransparency = 0.7
-subtitle.TextScaled = true
-subtitle.Font = Enum.Font.Gotham
-subtitle.ZIndex = 1
-subtitle.Parent = background
+local credit = Instance.new("TextLabel", background)
+credit.Size = UDim2.new(1, 0, 0, 30)
+credit.Position = UDim2.new(0, 0, 0.46, 0) -- немного ниже
+credit.Text = "By @thebestexploiterr on tiktok"
+credit.TextColor3 = Color3.fromRGB(0, 140, 255)
+credit.TextSize = 20
+credit.Font = Enum.Font.Gotham
+credit.BackgroundTransparency = 1
 
--- Полоса загрузки (фон)
-local barBackground = Instance.new("Frame")
-barBackground.Size = UDim2.new(0.5, 0, 0.025, 0)
-barBackground.Position = UDim2.new(0.25, 0, 0.52, 0)
-barBackground.BackgroundColor3 = darkBlue
+-- Текст Loading
+local loadingText = Instance.new("TextLabel", background)
+loadingText.Size = UDim2.new(1, 0, 0, 30)
+loadingText.Position = UDim2.new(0, 0, 0.54, 0)
+loadingText.Text = "Loading..."
+loadingText.TextColor3 = Color3.fromRGB(120, 160, 255)
+loadingText.TextSize = 20
+loadingText.Font = Enum.Font.Gotham
+loadingText.BackgroundTransparency = 1
+
+-- Обёртка загрузочного бара
+local barBackground = Instance.new("Frame", background)
+barBackground.Size = UDim2.new(0.5, 0, 0, 20)
+barBackground.Position = UDim2.new(0.25, 0, 0.6, 0)
+barBackground.BackgroundColor3 = Color3.fromRGB(30, 50, 100)
 barBackground.BorderSizePixel = 0
 barBackground.ClipsDescendants = true
+barBackground.BackgroundTransparency = 0
 barBackground.ZIndex = 1
-barBackground.Parent = background
+barBackground.Name = "BarBG"
+barBackground:FindFirstChildOfClass("UICorner") or Instance.new("UICorner", barBackground).CornerRadius = UDim.new(0, 10)
 
-local bgCorner = Instance.new("UICorner")
-bgCorner.CornerRadius = UDim.new(1, 0)
-bgCorner.Parent = barBackground
+-- Белый индикатор прогресса
+local bar = Instance.new("Frame", barBackground)
+bar.Size = UDim2.new(0, 0, 1, 0)
+bar.Position = UDim2.new(0, 0, 0, 0)
+bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+bar.BorderSizePixel = 0
+bar.ZIndex = 2
+Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 10)
 
--- Загрузка
-local loadingBar = Instance.new("Frame")
-loadingBar.Size = UDim2.new(0, 0, 1, 0)
-loadingBar.Position = UDim2.new(0, 0, 0, 0)
-loadingBar.BackgroundColor3 = barFillColor
-loadingBar.BorderSizePixel = 0
-loadingBar.ZIndex = 2
-loadingBar.Parent = barBackground
+-- Кнопка Rejoin
+local rejoinBtn = Instance.new("TextButton", background)
+rejoinBtn.Size = UDim2.new(0, 200, 0, 40)
+rejoinBtn.Position = UDim2.new(0.5, -100, 0.7, 0)
+rejoinBtn.Text = "Rejoin"
+rejoinBtn.BackgroundColor3 = Color3.fromRGB(40, 80, 180)
+rejoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+rejoinBtn.TextSize = 20
+rejoinBtn.Font = Enum.Font.Gotham
+Instance.new("UICorner", rejoinBtn).CornerRadius = UDim.new(0, 10)
 
-local barCorner = Instance.new("UICorner")
-barCorner.CornerRadius = UDim.new(1, 0)
-barCorner.Parent = loadingBar
-
--- Статус текста
-local statusText = Instance.new("TextLabel")
-statusText.Size = UDim2.new(1, 0, 0.05, 0)
-statusText.Position = UDim2.new(0, 0, 0.565, 0)
-statusText.BackgroundTransparency = 1
-statusText.Text = "Starting..."
-statusText.TextColor3 = mainBlue
-statusText.TextStrokeTransparency = 0.7
-statusText.TextScaled = true
-statusText.Font = Enum.Font.Gotham
-statusText.ZIndex = 1
-statusText.Parent = background
-
--- Сообщения
-local fakeMessages = {
-	"Initializing...",
-	"Loading modules...",
-	"Optimizing assets...",
-	"Connecting to servers...",
-	"Loading UI components...",
-	"Injecting scripts...",
-	"Almost done...",
-	"Finalizing..."
-}
-
--- Меняем сообщение каждые 15 сек
-task.spawn(function()
-	for i = 1, math.floor(180 / 15) do
-		statusText.Text = fakeMessages[math.random(1, #fakeMessages)]
-		task.wait(15)
-	end
+-- Обработка нажатия Rejoin
+rejoinBtn.MouseButton1Click:Connect(function()
+	local player = Players.LocalPlayer
+	TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
 end)
 
--- Анимация загрузки
-local TweenService = game:GetService("TweenService")
-local tween = TweenService:Create(loadingBar, TweenInfo.new(180, Enum.EasingStyle.Linear), {
-	Size = UDim2.new(1, 0, 1, 0)
-})
-tween:Play()
+-- Медленная загрузка (3 минуты)
+local duration = 180 -- секунд
+local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+TweenService:Create(bar, tweenInfo, {Size = UDim2.new(1, 0, 1, 0)}):Play()
 
--- Через 3 минуты — сообщение об ошибке
-task.delay(180, function()
-	-- Удаляем все старое
-	for _, obj in pairs(background:GetChildren()) do
-		if obj ~= background then
-			obj:Destroy()
-		end
-	end
-
-	-- Сообщение об ошибке
-	local errorText = Instance.new("TextLabel")
-	errorText.Size = UDim2.new(1, 0, 0.2, 0)
-	errorText.Position = UDim2.new(0, 0, 0.4, 0)
-	errorText.BackgroundTransparency = 1
-	errorText.Text = "Oops...\nThe Loading Failed\nRejoin And Try Again!"
-	errorText.TextColor3 = Color3.fromRGB(255, 255, 255)
-	errorText.TextStrokeTransparency = 0.4
-	errorText.TextScaled = true
-	errorText.Font = Enum.Font.GothamBold
-	errorText.ZIndex = 2
-	errorText.Parent = background
+-- После 3 минут – сообщение об ошибке
+task.delay(duration, function()
+	loadingText.Text = "Oops.. The Loading Failed"
+	credit.Text = "Rejoin And Try Again!"
 end)
