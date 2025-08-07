@@ -39,7 +39,7 @@ local logo = Instance.new("ImageLabel", bg)
 logo.Size = UDim2.new(0, 100, 0, 100)
 logo.Position = UDim2.new(0.5, -50, 0.25, -50)
 logo.BackgroundTransparency = 1
-logo.Image = "rbxassetid://13577884121" -- можно заменить на любой другой ID
+logo.Image = "rbxassetid://13577884121" -- заменяемый логотип
 logo.ZIndex = 2
 
 task.spawn(function()
@@ -63,7 +63,7 @@ title.ZIndex = 2
 -- Автор
 local credit = Instance.new("TextLabel", bg)
 credit.Size = UDim2.new(1, 0, 0, 30)
-credit.Position = UDim2.new(0, 0, 0.46, 5) -- смещение вниз на 5 пикселей
+credit.Position = UDim2.new(0, 0, 0.46, 5)
 credit.Text = "By @thebestexploiterr on tiktok"
 credit.TextColor3 = Color3.fromRGB(0, 140, 255)
 credit.TextSize = 20
@@ -99,8 +99,9 @@ bar.BorderSizePixel = 0
 bar.ZIndex = 2
 Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 10)
 
--- Кнопка Rejoin
+-- Кнопка Rejoin (изначально скрыта)
 local btn = Instance.new("TextButton", bg)
+btn.Visible = false
 btn.Size = UDim2.new(0, 200, 0, 40)
 btn.Position = UDim2.new(0.5, -100, 0.7, 0)
 btn.Text = "Rejoin"
@@ -110,18 +111,20 @@ btn.TextSize = 20
 btn.Font = Enum.Font.Gotham
 btn.ZIndex = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+
 btn.MouseButton1Click:Connect(function()
-	TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+	TeleportService:Teleport(game.PlaceId)
 end)
 
 -- Анимация загрузки
-local duration = 180
+local duration = 180 -- 3 минуты
 TweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
 	Size = UDim2.new(1, 0, 1, 0)
 }):Play()
 
--- После 3 минут
+-- Через 3 минуты показать ошибку и Rejoin
 task.delay(duration, function()
 	loadingText.Text = "Oops.. The Loading Failed"
 	credit.Text = "Rejoin And Try Again!"
+	btn.Visible = true
 end)
